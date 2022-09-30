@@ -22,6 +22,14 @@
   border-radius: 5px;
 }
 
+.red-border {
+  opacity: 0.5;
+  border: 2px solid red !important;
+  /* box-sizing: border-box; */
+  border-radius: 5px;
+  position: relative;
+}
+
 label {
   font-style: normal;
   font-weight: 500;
