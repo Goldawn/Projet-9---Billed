@@ -11,6 +11,7 @@ import {localStorageMock} from "../__mocks__/localStorage.js";
 import '@testing-library/jest-dom';
 import mockStore from "../__mocks__/store"
 import { ROUTES } from "../constants/routes.js";
+import Logout from "../containers/Logout.js"
 import router from "../app/Router.js";
 import userEvent from '@testing-library/user-event'
 
@@ -180,5 +181,37 @@ describe('When I click on eye icon', () => {
     await waitFor(() => document.getElementById('modaleFile'))
     const modal = document.getElementById('modaleFile')
     expect(modal).toBeVisible()
+  })
+  test('Then the button to close the modal should be visible, after a click the modal should close and the Bills page should be rendered ', async () => {
+    const closeBtn = screen.getByLabelText("Close");
+    expect(closeBtn).toBeVisible()
+
+    closeBtn.click();
+    await waitFor(() => screen.getAllByText("Mes notes de frais"))
+    expect(screen.getAllByText("Mes notes de frais")).toBeTruthy();
+  })
+})
+describe('Given I am connected', () => {
+  describe('When I am on New Bill page', () => { 
+    describe('When I click on disconnect button', () => {
+      test(('Then, I should be sent to login page'), () => {
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname })
+        }
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+        window.localStorage.setItem('user', JSON.stringify({
+          type: 'Employee'
+        }))
+        document.body.innerHTML = BillsUI({ data: bills })
+        const logout = new Logout({ document, onNavigate, localStorage })
+        const handleClick = jest.fn(logout.handleClick)
+  
+        const disco = screen.getByTestId('layout-disconnect')
+        disco.addEventListener('click', handleClick)
+        userEvent.click(disco)
+        expect(handleClick).toHaveBeenCalled()
+        expect(screen.getByText('Employé')).toBeTruthy()
+      })
+    })
   })
 })

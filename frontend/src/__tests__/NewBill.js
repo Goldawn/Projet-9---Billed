@@ -1,6 +1,8 @@
 import { fireEvent, getAllByText, screen, waitFor } from "@testing-library/dom";
 import NewBillUI from "../views/NewBillUI.js";
 import NewBill from "../containers/NewBill.js";
+import Bills from "../containers/Bills.js";
+import Logout from "../containers/Logout.js"
 import { ROUTES, ROUTES_PATH } from "../constants/routes";
 import { localStorageMock } from "../__mocks__/localStorage.js";
 import mockStore from "../__mocks__/store";
@@ -27,6 +29,14 @@ describe("Given I am connected as an employee", () => {
   router();
 
   describe("When I am on NewBill Page", () => {
+    test("if I click on the back navigation button of the browser, it should not redirect me", async () => {
+    window.onNavigate(ROUTES_PATH.NewBill);
+    await waitFor(() => screen.getAllByText("Envoyer une note de frais"));
+    expect(screen.getAllByText("Envoyer une note de frais")).toBeTruthy();
+    const currentLocation = window.location.href;
+    window.history.back();
+    expect(window.location.href).toEqual(currentLocation);
+    });
     test("Then mail icon in vertical layout should be highlighted", async () => {
       window.onNavigate(ROUTES_PATH.NewBill);
 
@@ -91,6 +101,10 @@ describe("Given I am connected as an employee", () => {
       const form = screen.getByTestId("form-new-bill");
       expect(form).toBeTruthy();
     });
+    test("and an error message should be displayed", () => {
+      const extErrorMessage = screen.getByTestId('error-message-ext');
+      expect(extErrorMessage).toBeVisible();
+    })
   });
 
   describe("when I upload a file with the good format", () => {
@@ -120,7 +134,32 @@ describe("Given I am connected as an employee", () => {
     });
   });
 });
+describe('Given I am connected', () => {
+  describe('When I am on New Bill page', () => {
+    describe('When I click on disconnect button', () => {
+      test(('Then, I should be sent to login page'), () => {
+        const onNavigate = (pathname) => {
+          document.body.innerHTML = ROUTES({ pathname })
+        }
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock })
+        window.localStorage.setItem('user', JSON.stringify({
+          type: 'Employee'
+        }))
+        document.body.innerHTML = NewBillUI();
+        const logout = new Logout({ document, onNavigate, localStorage })
+        const handleClick = jest.fn(logout.handleClick)
+  
+        const disco = screen.getByTestId('layout-disconnect')
+        disco.addEventListener('click', handleClick)
+        userEvent.click(disco)
+        expect(handleClick).toHaveBeenCalled()
+        expect(screen.getByText('Employé')).toBeTruthy()
+      })
+    })
+  })
+})
 
+// test d'intégration POST
 describe("Given I am connected as Employee on NewBill page, and submit the form", () => {
   beforeEach(() => {
     jest.spyOn(mockStore, "bills");
@@ -178,18 +217,7 @@ describe("Given I am connected as Employee on NewBill page, and submit the form"
       uploadInput.addEventListener("change", handleChangeFile);
       newBillJs.updateBill = jest.fn();
 
-      const validBill = {
-        type: "Transport",
-        name: "Train Paris Toulouse",
-        date: "2022-07-02",
-        amount: 350,
-        vat: 70,
-        pct: 20,
-        commentary: "Prix billet TGV : 350€",
-        fileUrl: "../img/fakeFile.jpg",
-        fileName: "billet-tgv.jpg",
-        status: "pending",
-      };
+      const validBill = bills[0];
 
       screen.getByTestId("expense-type").value = validBill.type;
       screen.getByTestId("expense-name").value = validBill.name;

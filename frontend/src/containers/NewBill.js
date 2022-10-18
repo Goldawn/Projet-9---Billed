@@ -28,6 +28,7 @@ export default class NewBill {
     const extension = fileName.substring(fileName.lastIndexOf("."))
 
     if (extension === ".jpg" || extension === ".jpeg" || extension === ".png") {
+      document.querySelector(".error-message-ext").style.display = "none"
       this.store
         .bills()
         .create({
@@ -41,13 +42,16 @@ export default class NewBill {
           this.fileUrl = fileUrl
           this.fileName = fileName
         }).catch(error => console.error(error))
+    } else {
+      // show error-message
+      document.querySelector(".error-message-ext").style.display = "block"
     }
   }
   handleSubmit = e => {
     e.preventDefault()
     const extension = this.fileName?.substring(this.fileName?.lastIndexOf(".")) 
 
-    if (extension === ".jpg" || extension === ".jpeg" || extension === ".png") {
+    // if (extension === ".jpg" || extension === ".jpeg" || extension === ".png") {
       const email = JSON.parse(localStorage.getItem("user")).email
       const bill = {
         email,
@@ -63,7 +67,7 @@ export default class NewBill {
         status: 'pending'
       }
       this.updateBill(bill)
-    }
+    // }
   }
 
 
